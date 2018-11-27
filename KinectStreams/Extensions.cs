@@ -11,7 +11,7 @@ namespace KinectStreams
 {
     public static class Extensions
     {
-        private static ImageSource ToBitmap(this ColorFrame frame)
+        public static ImageSource ToBitmap(this ColorFrame frame)
         {
             int width = frame.FrameDescription.Width;
             int height = frame.FrameDescription.Height;
@@ -28,12 +28,12 @@ namespace KinectStreams
                 frame.CopyConvertedFrameDataToArray(pixels, ColorImageFormat.Bgra);
             }
 
-            int stride = width + format.BitsPerPixel / 8;
+            int stride = width * format.BitsPerPixel / 8;
 
             return BitmapSource.Create(width, height, 96, 96, format, null, pixels, stride);
         }
 
-        private static ImageSource ToBitmap(this DepthFrame frame)
+        public static ImageSource ToBitmap(this DepthFrame frame)
         {
             int width = frame.FrameDescription.Width;
             int height = frame.FrameDescription.Height;
@@ -65,7 +65,7 @@ namespace KinectStreams
             return BitmapSource.Create(width, height, 96, 96, format, null, pixelData, stride);
         }
 
-        private static ImageSource ToBitmap(this InfraredFrame frame)
+        public static ImageSource ToBitmap(this InfraredFrame frame)
         {
             int width = frame.FrameDescription.Width;
             int height = frame.FrameDescription.Height;
@@ -91,7 +91,7 @@ namespace KinectStreams
 
             int stride = width * format.BitsPerPixel / 8;
 
-            return BitmapSource.Create(width, height, 96, 96, format, null, pixels, stride);
+            return BitmapSource.Create(width, height, 96, 96, format, null, pixelData, stride);
         }
     }
 }
