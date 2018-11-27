@@ -31,13 +31,19 @@ namespace KinectStreams
 
         KinectSensor _sensor;
         MultiSourceFrameReader _reader;
+        IList<Body> _bodies;
+
+        int _count = 0;
+        #if DEBUG
+        bool debug = true;
+        #endif
 
         #region Initialisers
 
         public MainWindow()
         {
-            InitializeComponent();
 
+            InitializeComponent();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -48,9 +54,22 @@ namespace KinectStreams
             {
                 _sensor.Open();
 
-                _reader = _sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth | FrameSourceTypes.Infrared);
+                _reader = _sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth | FrameSourceTypes.Infrared | FrameSourceTypes.Body);
                 _reader.MultiSourceFrameArrived += Reader_MultiSourceFrameArrived;
+
+                if (!debug)
+                {
+                    _reader.MultiSourceFrameArrived += Reader_ApplyDebugInformation;
+                }
+
             }
+        }
+
+        private void Reader_ApplyDebugInformation(object sender, MultiSourceFrameArrivedEventArgs e)
+        {
+            // Handle changed event
+            _count++;
+            counter.Text = _count.ToString();
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -68,6 +87,7 @@ namespace KinectStreams
 
         #endregion
 
+        // Fires every time a frame changes
         private void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             var reference = e.FrameReference.AcquireFrame();
@@ -105,6 +125,15 @@ namespace KinectStreams
                     {
                         camera.Source = frame.ToBitmap();
                     }
+                }
+            }
+
+            // Body
+            using (var frame = reference.BodyFrameReference.AcquireFrame())
+            {
+                if (frame != null)
+                {
+                    _bodies = new Body[frame.BodyFrameSource.BodyCount];
                 }
             }
         }
