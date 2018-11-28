@@ -32,8 +32,11 @@ namespace KinectStreams
         KinectSensor _sensor;
         MultiSourceFrameReader _reader;
         IList<Body> _bodies;
+        bool _drawBody;
 
         int _count = 0;
+        int _frameCount = 0;
+
         #if DEBUG
         bool debug = true;
         #endif
@@ -57,7 +60,7 @@ namespace KinectStreams
                 _reader = _sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth | FrameSourceTypes.Infrared | FrameSourceTypes.Body);
                 _reader.MultiSourceFrameArrived += Reader_MultiSourceFrameArrived;
 
-                if (!debug)
+                if (debug)
                 {
                     _reader.MultiSourceFrameArrived += Reader_ApplyDebugInformation;
                 }
@@ -68,8 +71,13 @@ namespace KinectStreams
         private void Reader_ApplyDebugInformation(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             // Handle changed event
-            _count++;
-            counter.Text = _count.ToString();
+            _frameCount++;
+            if (_frameCount == 30)
+            {
+                _count++;
+                counter.Text = _count.ToString();
+                _frameCount = 0;
+            }
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -133,7 +141,19 @@ namespace KinectStreams
             {
                 if (frame != null)
                 {
+                    canvas.Children.Clear();
+
                     _bodies = new Body[frame.BodyFrameSource.BodyCount];
+
+                    frame.GetAndRefreshBodyData(_bodies);
+
+                    foreach (var body in _bodies)
+                    {
+                        if (body != null && body.IsTracked && _drawBody)
+                        {
+                            canvas.DrawSkeleton(body);
+                        }
+                    }
                 }
             }
         }
@@ -155,7 +175,7 @@ namespace KinectStreams
 
         private void Body_Click(object sender, RoutedEventArgs e)
         {
-
+            _drawBody = !_drawBody;
         }
     }
 }
