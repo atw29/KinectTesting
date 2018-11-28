@@ -34,6 +34,15 @@ namespace KinectStreams
         IList<Body> _bodies;
         bool _drawBody = false;
 
+        #region Window Elements
+        TextBox counter;
+        Rectangle rhsRect;
+        Rectangle lhsRect;
+        Rectangle topRect;
+        Rectangle botRect;
+        #endregion
+
+
         int _count = 0;
         int _frameCount = 0;
 
@@ -58,14 +67,95 @@ namespace KinectStreams
                 _sensor.Open();
 
                 _reader = _sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth | FrameSourceTypes.Infrared | FrameSourceTypes.Body);
-                _reader.MultiSourceFrameArrived += Reader_MultiSourceFrameArrived;
 
                 if (debug)
                 {
-                    _reader.MultiSourceFrameArrived += Reader_ApplyDebugInformation;
+                    _reader.MultiSourceFrameArrived += Reader_ShowCameraAndSkeleton;
+                    HighlightKeyAreas(_reader);
+                    //AddDebugTextBox(_reader);
                 }
 
             }
+        }
+
+        private void HighlightKeyAreas(MultiSourceFrameReader reader)
+        {
+            #region Make rects
+            rhsRect = new Rectangle
+            {
+                Name = "rhsRect",
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Center,
+                Height = canvas.Height,
+                Width = canvas.Width / 3,
+                Opacity = 0
+            };
+            lhsRect = new Rectangle
+            {
+                Name = "lhsRect",
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                Height = canvas.Height,
+                Width = canvas.Width / 3
+            };
+
+            canvas.Children.Add(rhsRect);
+            canvas.Children.Add(lhsRect);
+
+            #endregion
+
+            _reader.MultiSourceFrameArrived += Reader_HighlightKeyAreaBoxes;
+            
+        }
+
+        private void Reader_HighlightKeyAreaBoxes(object sender, MultiSourceFrameArrivedEventArgs e)
+        {
+            var reference = e.FrameReference.AcquireFrame();
+
+            using(var frame = reference.BodyFrameReference.AcquireFrame())
+            {
+                if (frame != null)
+                {
+                    // Get user right hand.
+                    _bodies = new Body[frame.BodyFrameSource.BodyCount];
+
+                    frame.GetAndRefreshBodyData(_bodies);
+
+                    foreach (Body body in _bodies)
+                    {
+                        if (body != null && body.IsTracked)
+                        {
+                            CoordinateMapper mapper = _sensor.CoordinateMapper;
+                            CameraSpacePoint cameraPoint = body.Joints[JointType.HandRight].Position;
+
+                            ColorSpacePoint colorSpacePoint = mapper.MapCameraPointToColorSpace(cameraPoint);
+
+                            if (colorSpacePoint.X >= 1920 - rhsRect.Width)
+                            {
+                                rhsRect.Opacity = 100;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void AddDebugTextBox(MultiSourceFrameReader reader)
+        {
+            counter = new TextBox
+            {
+                Name="counter",
+                Width=100,
+                Margin= new Thickness(10),
+                Padding = new Thickness(5),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextAlignment = TextAlignment.Center
+            };
+
+            buttonPanel.Children.Add(counter);
+            _reader.MultiSourceFrameArrived += Reader_ApplyDebugInformation;
+            
         }
 
         private void Reader_ApplyDebugInformation(object sender, MultiSourceFrameArrivedEventArgs e)
@@ -96,7 +186,7 @@ namespace KinectStreams
         #endregion
 
         // Fires every time a frame changes
-        private void Reader_MultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
+        private void Reader_ShowCameraAndSkeleton(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             var reference = e.FrameReference.AcquireFrame();
 

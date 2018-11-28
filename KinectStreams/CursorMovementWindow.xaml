@@ -1,0 +1,20 @@
+﻿<Window x:Class="KinectStreams.CursorMovement"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KinectStreams"
+        mc:Ignorable="d"
+        Title="CursorMovement" Width="1920" Height="1080" WindowState="Maximized">
+    <Grid>
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Name="_fileMenu" Header="_File">
+                    <MenuItem Header="_Open"/>
+                </MenuItem>
+            </Menu>
+        </DockPanel>
+        <Button x:Name="button" Click="Button_Click" Content="Button" HorizontalAlignment="Left" Margin="902,284,0,0" VerticalAlignment="Top" Width="148" Height="70"/>
+
+    </Grid>
+</Window>

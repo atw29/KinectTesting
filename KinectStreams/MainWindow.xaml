@@ -7,16 +7,15 @@
         mc:Ignorable="d"
         Title="Kinect | Colour, Depth and Infrared" Height="1080" Width="1920" WindowState="Maximized"
         Loaded="Window_Loaded" Closed="Window_Closed">
-    <Grid>
+    <Grid Name="topGrid">
         <Image Name="camera" />
         <Canvas Name="canvas" />
         <Grid Style="{StaticResource GridButtonsStyle}">
-            <StackPanel Style="{StaticResource StackPanelButtonsStyle}">
+            <StackPanel Style="{StaticResource StackPanelButtonsStyle}" Name="buttonPanel">
                 <Button Content="Color" Style="{StaticResource ButtonStyle}" Click="Color_Click" />
                 <Button Content="Depth" Style="{StaticResource ButtonStyle}" Click="Depth_Click" />
                 <Button Content="Infrared" Style="{StaticResource ButtonStyle}" Click="Infrared_Click" />
                 <Button Content="Body" Style="{StaticResource ButtonStyle}" Click="Body_Click" />
-                <TextBox Style="{StaticResource TextStyle}" Name="counter">Hello World</TextBox>
             </StackPanel>
         </Grid>
     </Grid>
