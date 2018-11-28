@@ -37,7 +37,7 @@ namespace KinectStreams
         #region Window Elements
         TextBox counter;
         Rectangle rhsRect;
-        Rectangle lhsRect;
+        //Rectangle lhsRect;
         Rectangle topRect;
         Rectangle botRect;
         #endregion
@@ -90,17 +90,17 @@ namespace KinectStreams
                 Width = canvas.Width / 3,
                 Opacity = 0
             };
-            lhsRect = new Rectangle
-            {
-                Name = "lhsRect",
-                HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Center,
-                Height = canvas.Height,
-                Width = canvas.Width / 3
-            };
+            //lhsRect = new Rectangle
+            //{
+            //    Name = "lhsRect",
+            //    HorizontalAlignment = HorizontalAlignment.Left,
+            //    VerticalAlignment = VerticalAlignment.Center,
+            //    Height = canvas.Height,
+            //    Width = canvas.Width / 3
+            //};
 
             canvas.Children.Add(rhsRect);
-            canvas.Children.Add(lhsRect);
+            //canvas.Children.Add(lhsRect);
 
             #endregion
 
@@ -126,13 +126,13 @@ namespace KinectStreams
                         if (body != null && body.IsTracked)
                         {
                             CoordinateMapper mapper = _sensor.CoordinateMapper;
-                            CameraSpacePoint cameraPoint = body.Joints[JointType.HandRight].Position;
+                            CameraSpacePoint cameraPoint = body.Joints[JointType.HandLeft].Position;
 
                             ColorSpacePoint colorSpacePoint = mapper.MapCameraPointToColorSpace(cameraPoint);
 
-                            if (colorSpacePoint.X >= 1920 - rhsRect.Width)
+                            if (colorSpacePoint.X < lhsRect.Width)
                             {
-                                rhsRect.Opacity = 100;
+                                lhsRect.Fill = new SolidColorBrush(Colors.Red);
                             }
                         }
                     }

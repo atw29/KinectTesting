@@ -9,7 +9,9 @@
         Loaded="Window_Loaded" Closed="Window_Closed">
     <Grid Name="topGrid">
         <Image Name="camera" />
-        <Canvas Name="canvas" />
+        <Canvas Name="canvas" >
+        </Canvas>
+        <Rectangle Height="983" Width="446" Name="lhsRect" HorizontalAlignment="Left"/>
         <Grid Style="{StaticResource GridButtonsStyle}">
             <StackPanel Style="{StaticResource StackPanelButtonsStyle}" Name="buttonPanel">
                 <Button Content="Color" Style="{StaticResource ButtonStyle}" Click="Color_Click" />
