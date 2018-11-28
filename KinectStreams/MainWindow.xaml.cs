@@ -32,7 +32,7 @@ namespace KinectStreams
         KinectSensor _sensor;
         MultiSourceFrameReader _reader;
         IList<Body> _bodies;
-        bool _drawBody;
+        bool _drawBody = false;
 
         int _count = 0;
         int _frameCount = 0;
@@ -151,7 +151,7 @@ namespace KinectStreams
                     {
                         if (body != null && body.IsTracked && _drawBody)
                         {
-                            canvas.DrawSkeleton(body);
+                            canvas.DrawSkeleton(body, _mode, _sensor.CoordinateMapper);
                         }
                     }
                 }
