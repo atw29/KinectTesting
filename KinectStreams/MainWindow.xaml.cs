@@ -75,24 +75,34 @@ namespace KinectStreams
                 if (debug)
                 {
                     _multisourceReader.MultiSourceFrameArrived += Reader_ShowCameraAndSkeleton;
-                    _bodyFrameReader.FrameArrived += Reader_HighlightKeyAreaBoxes;
-                    //_bodyFrameReader.FrameArrived += Reader_DrawHands;
+                    _bodyFrameReader.FrameArrived += BodyReader_RefreshBodyData;
+                    _bodyFrameReader.FrameArrived += BodyReader_HighlightKeyAreaBoxes;
+                    _bodyFrameReader.FrameArrived += BodyReader_DrawHands;
                     //AddDebugTextBox(_reader);
                 }
 
             }
         }
 
-        private void Reader_DrawHands(object sender, BodyFrameArrivedEventArgs e)
+        private void BodyReader_RefreshBodyData(object sender, BodyFrameArrivedEventArgs e)
         {
             using (var frame = e.FrameReference.AcquireFrame())
             {
-                if (frame != null )
+                if (frame != null)
                 {
-                    canvas.Children.Clear();
-
                     _bodies = new Body[frame.BodyFrameSource.BodyCount];
                     frame.GetAndRefreshBodyData(_bodies);
+                }
+            }
+        }
+
+        private void BodyReader_DrawHands(object sender, BodyFrameArrivedEventArgs e)
+        {
+            using (var frame = e.FrameReference.AcquireFrame())
+            {
+                if (frame != null && !_drawBody )
+                {
+                    canvas.Children.Clear();
 
                     Body body = _bodies.Where(b => b.IsTracked).FirstOrDefault();
 
@@ -105,7 +115,7 @@ namespace KinectStreams
             }
         }
 
-        private void Reader_HighlightKeyAreaBoxes(object sender, BodyFrameArrivedEventArgs e)
+        private void BodyReader_HighlightKeyAreaBoxes(object sender, BodyFrameArrivedEventArgs e)
         {
             using (var frame = e.FrameReference.AcquireFrame())
             {
@@ -113,16 +123,13 @@ namespace KinectStreams
                 {
                     canvas.Children.Clear();
 
-                    _bodies = new Body[frame.BodyFrameSource.BodyCount];
-                    frame.GetAndRefreshBodyData(_bodies);
+                    //_bodies = new Body[frame.BodyFrameSource.BodyCount];
+                    //frame.GetAndRefreshBodyData(_bodies);
 
                     Body body = _bodies.Where(b => b.IsTracked).FirstOrDefault();
 
                     if (body != null)
-                    {
-
-                        canvas.DrawPoint(body.Joints[JointType.HandLeft], _mode, _sensor.CoordinateMapper, Colors.Red);
-                        canvas.DrawPoint(body.Joints[JointType.HandRight], _mode, _sensor.CoordinateMapper, Colors.Red);
+                    { 
                         // Left Hand Region
                         lhsRect.Highlight_Region(body, JointType.HandLeft, (pos, rect) => pos < rect);
 
@@ -228,9 +235,9 @@ namespace KinectStreams
                 {
                     canvas.Children.Clear();
 
-                    _bodies = new Body[frame.BodyFrameSource.BodyCount];
+                    //_bodies = new Body[frame.BodyFrameSource.BodyCount];
 
-                    frame.GetAndRefreshBodyData(_bodies);
+                    //frame.GetAndRefreshBodyData(_bodies);
 
                     foreach (var body in _bodies)
                     {
