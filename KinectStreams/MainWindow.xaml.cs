@@ -75,7 +75,7 @@ namespace KinectStreams
                 if (debug)
                 {
                     _multisourceReader.MultiSourceFrameArrived += Reader_ShowCameraAndSkeleton;
-                    _bodyFrameReader.FrameArrived += BodyReader_RefreshBodyData;
+                    _bodyFrameReader.FrameArrived += BodyReader_RefreshBodyDataAndClearCanvas;
                     _bodyFrameReader.FrameArrived += BodyReader_HighlightKeyAreaBoxes;
                     _bodyFrameReader.FrameArrived += BodyReader_DrawHands;
                     //AddDebugTextBox(_reader);
@@ -84,12 +84,13 @@ namespace KinectStreams
             }
         }
 
-        private void BodyReader_RefreshBodyData(object sender, BodyFrameArrivedEventArgs e)
+        private void BodyReader_RefreshBodyDataAndClearCanvas(object sender, BodyFrameArrivedEventArgs e)
         {
             using (var frame = e.FrameReference.AcquireFrame())
             {
                 if (frame != null)
                 {
+                    canvas.Children.Clear();
                     _bodies = new Body[frame.BodyFrameSource.BodyCount];
                     frame.GetAndRefreshBodyData(_bodies);
                 }
@@ -102,8 +103,6 @@ namespace KinectStreams
             {
                 if (frame != null && !_drawBody )
                 {
-                    canvas.Children.Clear();
-
                     Body body = _bodies.Where(b => b.IsTracked).FirstOrDefault();
 
                     if (body != null)
@@ -121,11 +120,6 @@ namespace KinectStreams
             {
                 if (frame != null)
                 {
-                    canvas.Children.Clear();
-
-                    //_bodies = new Body[frame.BodyFrameSource.BodyCount];
-                    //frame.GetAndRefreshBodyData(_bodies);
-
                     Body body = _bodies.Where(b => b.IsTracked).FirstOrDefault();
 
                     if (body != null)
@@ -233,11 +227,6 @@ namespace KinectStreams
             {
                 if (frame != null && _drawBody)
                 {
-                    canvas.Children.Clear();
-
-                    //_bodies = new Body[frame.BodyFrameSource.BodyCount];
-
-                    //frame.GetAndRefreshBodyData(_bodies);
 
                     foreach (var body in _bodies)
                     {
