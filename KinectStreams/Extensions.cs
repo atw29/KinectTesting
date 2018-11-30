@@ -268,5 +268,22 @@ namespace KinectStreams
         }
 
         #endregion
+
+        public static void Highlight_Region(this Rectangle rect, Body body, JointType jointType, Func<float, double, bool> compareFunc)
+        {
+            KinectSensor _sensor = KinectSensor.GetDefault();
+
+            CameraSpacePoint cameraPoint = body.Joints[jointType].Position;
+            ColorSpacePoint colourSpacePoint = _sensor.CoordinateMapper.MapCameraPointToColorSpace(cameraPoint);
+            
+            if (compareFunc(colourSpacePoint.X, rect.Width))
+            {
+                rect.Opacity = 0.5;
+            }
+            else
+            {
+                rect.Opacity = 0;
+            }
+        }
     }
 }

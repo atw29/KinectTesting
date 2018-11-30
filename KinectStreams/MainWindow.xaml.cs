@@ -29,14 +29,17 @@ namespace KinectStreams
     {
         Mode _mode = Mode.Colour;
 
-        KinectSensor _sensor;
-        MultiSourceFrameReader _reader;
+        private KinectSensor _sensor;
+        private MultiSourceFrameReader _multisourceReader;
+        private BodyFrameSource _bodyFrameSource;
+        private BodyFrameReader _bodyFrameReader;
+
         IList<Body> _bodies;
         bool _drawBody = false;
 
         #region Window Elements
         TextBox counter;
-        Rectangle rhsRect;
+        //Rectangle rhsRect;
         //Rectangle lhsRect;
         Rectangle topRect;
         Rectangle botRect;
@@ -60,36 +63,39 @@ namespace KinectStreams
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            
+
             _sensor = KinectSensor.GetDefault();
+
             if (_sensor != null)
             {
                 _sensor.Open();
 
-                _reader = _sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth | FrameSourceTypes.Infrared | FrameSourceTypes.Body);
+                _multisourceReader = _sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth | FrameSourceTypes.Infrared | FrameSourceTypes.Body);
+                _bodyFrameSource = _sensor.BodyFrameSource;
+                _bodyFrameReader = _bodyFrameSource.OpenReader();
 
                 if (debug)
                 {
-                    _reader.MultiSourceFrameArrived += Reader_ShowCameraAndSkeleton;
-                    HighlightKeyAreas(_reader);
+                    _multisourceReader.MultiSourceFrameArrived += Reader_ShowCameraAndSkeleton;
+                    HighlightKeyAreas();
                     //AddDebugTextBox(_reader);
                 }
 
             }
         }
 
-        private void HighlightKeyAreas(MultiSourceFrameReader reader)
+        private void HighlightKeyAreas()
         {
             #region Make rects
-            rhsRect = new Rectangle
-            {
-                Name = "rhsRect",
-                HorizontalAlignment = HorizontalAlignment.Right,
-                VerticalAlignment = VerticalAlignment.Center,
-                Height = canvas.Height,
-                Width = canvas.Width / 3,
-                Opacity = 0
-            };
+            //rhsRect = new Rectangle
+            //{
+            //    Name = "rhsRect",
+            //    HorizontalAlignment = HorizontalAlignment.Right,
+            //    VerticalAlignment = VerticalAlignment.Center,
+            //    Height = canvas.Height,
+            //    Width = canvas.Width / 3,
+            //    Opacity = 0
+            //};
             //lhsRect = new Rectangle
             //{
             //    Name = "lhsRect",
@@ -99,46 +105,72 @@ namespace KinectStreams
             //    Width = canvas.Width / 3
             //};
 
-            canvas.Children.Add(rhsRect);
+            //canvas.Children.Add(rhsRect);
             //canvas.Children.Add(lhsRect);
 
             #endregion
 
-            _reader.MultiSourceFrameArrived += Reader_HighlightKeyAreaBoxes;
+            _bodyFrameReader.FrameArrived += Reader_HighlightKeyAreaBoxes;
             
         }
 
-        private void Reader_HighlightKeyAreaBoxes(object sender, MultiSourceFrameArrivedEventArgs e)
+        private void Reader_HighlightKeyAreaBoxes(object sender, BodyFrameArrivedEventArgs e)
         {
-            var reference = e.FrameReference.AcquireFrame();
-
-            using(var frame = reference.BodyFrameReference.AcquireFrame())
+            using (var frame = e.FrameReference.AcquireFrame())
             {
                 if (frame != null)
                 {
-                    // Get user right hand.
-                    _bodies = new Body[frame.BodyFrameSource.BodyCount];
+                    IList<Body> _localBodies = new Body[frame.BodyFrameSource.BodyCount];
+                    frame.GetAndRefreshBodyData(_localBodies);
 
-                    frame.GetAndRefreshBodyData(_bodies);
+                    Body body = _localBodies.Where(b => b.IsTracked).FirstOrDefault();
 
-                    foreach (Body body in _bodies)
+                    if (body != null)
                     {
-                        if (body != null && body.IsTracked)
-                        {
-                            CoordinateMapper mapper = _sensor.CoordinateMapper;
-                            CameraSpacePoint cameraPoint = body.Joints[JointType.HandLeft].Position;
+                        // Left Hand Region
+                        lhsRect.Highlight_Region(body, JointType.HandLeft, (pos, rect) => pos < rect);
 
-                            ColorSpacePoint colorSpacePoint = mapper.MapCameraPointToColorSpace(cameraPoint);
-
-                            if (colorSpacePoint.X < lhsRect.Width)
-                            {
-                                lhsRect.Fill = new SolidColorBrush(Colors.Red);
-                            }
-                        }
+                        // RHS
+                        rhsRect.Highlight_Region(body, JointType.HandRight, (pos, rect) => pos > canvas.ActualWidth - rect);
                     }
+
                 }
             }
+
         }
+
+
+        //private void Reader_HighlightKeyAreaBoxes(object sender, MultiSourceFrameArrivedEventArgs e)
+        //{
+        //    var reference = e.FrameReference.AcquireFrame();
+
+        //    using(var frame = reference.BodyFrameReference.AcquireFrame())
+        //    {
+        //        if (frame != null)
+        //        {
+        //            // Get user right hand.
+        //            _bodies = new Body[frame.BodyFrameSource.BodyCount];
+
+        //            frame.GetAndRefreshBodyData(_bodies);
+
+        //            foreach (Body body in _bodies)
+        //            {
+        //                if (body != null && body.IsTracked)
+        //                {
+        //                    CoordinateMapper mapper = _sensor.CoordinateMapper;
+        //                    CameraSpacePoint cameraPoint = body.Joints[JointType.HandLeft].Position;
+
+        //                    ColorSpacePoint colorSpacePoint = mapper.MapCameraPointToColorSpace(cameraPoint);
+
+        //                    if (colorSpacePoint.X < lhsRect.Width)
+        //                    {
+        //                        lhsRect.Fill = new SolidColorBrush(Colors.Red);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
 
         private void AddDebugTextBox(MultiSourceFrameReader reader)
         {
@@ -154,7 +186,7 @@ namespace KinectStreams
             };
 
             buttonPanel.Children.Add(counter);
-            _reader.MultiSourceFrameArrived += Reader_ApplyDebugInformation;
+            _multisourceReader.MultiSourceFrameArrived += Reader_ApplyDebugInformation;
             
         }
 
@@ -172,9 +204,9 @@ namespace KinectStreams
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            if (_reader != null)
+            if (_multisourceReader != null)
             {
-                _reader.Dispose();
+                _multisourceReader.Dispose();
             }
 
             if (_sensor != null)
