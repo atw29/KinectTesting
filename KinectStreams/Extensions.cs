@@ -143,7 +143,7 @@ namespace KinectStreams
 
         #region Draw Points
 
-        public static void DrawPoint(this Canvas canvas, Tuple<Point, bool> point)
+        public static void DrawPoint(this Canvas canvas, Tuple<Point, bool> point, Color? color)
         {
             // 1) check whether the joint is tracked (or, more accurately, isn't NOT tracked)
             if (point.Item2)
@@ -154,7 +154,7 @@ namespace KinectStreams
                 {
                     Width = 20,
                     Height = 20,
-                    Fill = new SolidColorBrush(Colors.LightBlue)
+                    Fill = new SolidColorBrush(color ?? Colors.LightBlue )
                 };
 
                 // 4) Position the ellipse according to the joint's coordinates
@@ -165,6 +165,21 @@ namespace KinectStreams
                 canvas.Children.Add(ellipse);
             }
 
+        }
+
+        public static void DrawPoint(this Canvas canvas, Tuple<Point, bool> point)
+        {
+            canvas.DrawPoint(point, null);
+        }
+
+        public static void DrawPoint(this Canvas canvas, Joint joint, Mode mode, CoordinateMapper coordinateMapper)
+        {
+            canvas.DrawPoint(GetPointTupleFromJoint(joint, mode, coordinateMapper));
+        }
+        public static void DrawPoint(this Canvas canvas, Joint joint, Mode mode, CoordinateMapper coordinateMapper, Color color)
+        {
+            Tuple<Point, bool> tuple = GetPointTupleFromJoint(joint, mode, coordinateMapper);
+            canvas.DrawPoint(tuple, color);
         }
 
         public static void DrawSkeleton(this Canvas canvas, Body body, Mode _mode, CoordinateMapper coordinateMapper)
@@ -178,6 +193,8 @@ namespace KinectStreams
                 {
                     canvas.DrawPoint(point);
                 }
+
+                #region Draw Lines
 
                 canvas.DrawLine(pointDict[JointType.Head], pointDict[JointType.Neck]);
                 canvas.DrawLine(pointDict[JointType.Neck], pointDict[JointType.SpineShoulder]);
@@ -204,6 +221,8 @@ namespace KinectStreams
                 canvas.DrawLine(pointDict[JointType.AnkleLeft], pointDict[JointType.FootLeft]);
                 canvas.DrawLine(pointDict[JointType.AnkleRight], pointDict[JointType.FootRight]);
 
+                #endregion
+
             }
 
         }
@@ -219,14 +238,19 @@ namespace KinectStreams
         {
             Dictionary<JointType, Tuple<Point, bool>> dict = new Dictionary<JointType, Tuple<Point, bool>>();
 
-            Point point = new Point();
-            CameraSpacePoint jointPosition;
-
             foreach (KeyValuePair<JointType, Joint> pair in joints)
             {
-                jointPosition = pair.Value.Position;
+                dict.Add(pair.Key, GetPointTupleFromJoint(pair.Value, _mode, coordinateMapper));
+            }
 
-                if (_mode == Mode.Colour)
+            return dict;
+        }
+
+        private static Tuple<Point, bool> GetPointTupleFromJoint(Joint joint, Mode _mode, CoordinateMapper coordinateMapper)
+        {
+            Point point = new Point();
+            CameraSpacePoint jointPosition = joint.Position;
+            if (_mode == Mode.Colour)
                 {
                     ColorSpacePoint colorPoint = coordinateMapper.MapCameraPointToColorSpace(jointPosition);
 
@@ -241,10 +265,7 @@ namespace KinectStreams
                     point.Y = float.IsInfinity(depthSpacePoint.Y) ? 0 : depthSpacePoint.Y;
                 }
 
-                dict.Add(pair.Key, new Tuple<Point, bool>(point, pair.Value.TrackingState != TrackingState.NotTracked));
-            }
-
-            return dict;
+            return new Tuple<Point, bool>(point, joint.TrackingState != TrackingState.NotTracked);
         }
 
         public static void DrawLine(this Canvas canvas, Tuple<Point, bool> first, Tuple<Point, bool> second)
