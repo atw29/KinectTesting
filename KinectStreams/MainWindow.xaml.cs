@@ -125,10 +125,10 @@ namespace KinectStreams
                     if (body != null)
                     { 
                         // Left Hand Region
-                        lhsRect.Highlight_Region(body, JointType.HandLeft, (pos, rect) => pos < rect);
+                        lhsRect.Highlight_Region(body, JointType.HandLeft, (pos, rect) => pos < rect, body.HandLeftState);
 
                         // RHS
-                        rhsRect.Highlight_Region(body, JointType.HandRight, (pos, rect) => pos > canvas.ActualWidth - rect);
+                        rhsRect.Highlight_Region(body, JointType.HandRight, (pos, rect) => pos > canvas.ActualWidth - rect, body.HandRightState);
                     }
 
                 }

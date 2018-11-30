@@ -290,7 +290,7 @@ namespace KinectStreams
 
         #endregion
 
-        public static void Highlight_Region(this Rectangle rect, Body body, JointType jointType, Func<float, double, bool> compareFunc)
+        public static void Highlight_Region(this Rectangle rect, Body body, JointType jointType, Func<float, double, bool> compareFunc, HandState handState)
         {
             KinectSensor _sensor = KinectSensor.GetDefault();
 
@@ -299,12 +299,39 @@ namespace KinectStreams
             
             if (compareFunc(colourSpacePoint.X, rect.Width))
             {
+                rect.Fill = new SolidColorBrush(GetRectColourFromHandState(body, handState));
                 rect.Opacity = 0.5;
             }
             else
             {
                 rect.Opacity = 0;
             }
+        }
+
+        private static Color GetRectColourFromHandState(Body body, HandState handState)
+        {
+            Color color = new Color();
+            switch(handState)
+            {
+                case HandState.Open:
+                    color = Colors.Green;
+                    break;
+                case HandState.Closed:
+                    color = Colors.Red;
+                    break;
+                case HandState.Lasso:
+                    color = Colors.Yellow;
+                    break;
+                case HandState.Unknown:
+                    color = Colors.Gray;
+                    break;
+                case HandState.NotTracked:
+                    color = Colors.Black;
+                    break;
+                default:
+                    break;
+            }
+            return color;
         }
     }
 }
