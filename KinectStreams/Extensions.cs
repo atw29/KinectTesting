@@ -248,24 +248,28 @@ namespace KinectStreams
 
         private static Tuple<Point, bool> GetPointTupleFromJoint(Joint joint, Mode _mode, CoordinateMapper coordinateMapper)
         {
+            return new Tuple<Point, bool>(GetPointFromJoint(joint, _mode, coordinateMapper), joint.TrackingState != TrackingState.NotTracked);
+        }
+
+        public static Point GetPointFromJoint(this Joint joint, Mode mode, CoordinateMapper coordinateMapper)
+        {
             Point point = new Point();
             CameraSpacePoint jointPosition = joint.Position;
-            if (_mode == Mode.Colour)
-                {
-                    ColorSpacePoint colorPoint = coordinateMapper.MapCameraPointToColorSpace(jointPosition);
+            if (mode == Mode.Colour)
+            {
+                ColorSpacePoint colorPoint = coordinateMapper.MapCameraPointToColorSpace(jointPosition);
 
-                    point.X = float.IsInfinity(colorPoint.X) ? 0 : colorPoint.X;
-                    point.Y = float.IsInfinity(colorPoint.Y) ? 0 : colorPoint.Y;
-                }
-                else // Mode == depth or infrared
-                {
-                    DepthSpacePoint depthSpacePoint = coordinateMapper.MapCameraPointToDepthSpace(jointPosition);
+                point.X = float.IsInfinity(colorPoint.X) ? 0 : colorPoint.X;
+                point.Y = float.IsInfinity(colorPoint.Y) ? 0 : colorPoint.Y;
+            }
+            else // Mode == depth or infrared
+            {
+                DepthSpacePoint depthSpacePoint = coordinateMapper.MapCameraPointToDepthSpace(jointPosition);
 
-                    point.X = float.IsInfinity(depthSpacePoint.X) ? 0 : depthSpacePoint.X;
-                    point.Y = float.IsInfinity(depthSpacePoint.Y) ? 0 : depthSpacePoint.Y;
-                }
-
-            return new Tuple<Point, bool>(point, joint.TrackingState != TrackingState.NotTracked);
+                point.X = float.IsInfinity(depthSpacePoint.X) ? 0 : depthSpacePoint.X;
+                point.Y = float.IsInfinity(depthSpacePoint.Y) ? 0 : depthSpacePoint.Y;
+            }
+            return point;
         }
 
         public static void DrawLine(this Canvas canvas, Tuple<Point, bool> first, Tuple<Point, bool> second)
@@ -292,12 +296,8 @@ namespace KinectStreams
 
         public static void Highlight_Region(this Rectangle rect, Body body, JointType jointType, Func<float, double, bool> compareFunc, HandState handState)
         {
-            KinectSensor _sensor = KinectSensor.GetDefault();
-
-            CameraSpacePoint cameraPoint = body.Joints[jointType].Position;
-            ColorSpacePoint colourSpacePoint = _sensor.CoordinateMapper.MapCameraPointToColorSpace(cameraPoint);
             
-            if (compareFunc(colourSpacePoint.X, rect.Width))
+            if (rect.InRegion(body, jointType, compareFunc))
             {
                 rect.Fill = new SolidColorBrush(GetRectColourFromHandState(body, handState));
                 rect.Opacity = 0.5;
@@ -306,6 +306,16 @@ namespace KinectStreams
             {
                 rect.Opacity = 0;
             }
+        }
+
+        public static bool InRegion(this Rectangle rect, Body body, JointType jointType, Func<float, double, bool> compareFunc)
+        {
+            KinectSensor _sensor = KinectSensor.GetDefault();
+
+            CameraSpacePoint cameraPoint = body.Joints[jointType].Position;
+            ColorSpacePoint colourSpacePoint = _sensor.CoordinateMapper.MapCameraPointToColorSpace(cameraPoint);
+
+            return compareFunc(colourSpacePoint.X, rect.Width);
         }
 
         private static Color GetRectColourFromHandState(Body body, HandState handState)

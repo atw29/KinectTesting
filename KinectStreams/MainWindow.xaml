@@ -11,8 +11,11 @@
         <Image Name="camera" />
         <Canvas Name="canvas" >
         </Canvas>
+
         <Rectangle Width="446" Name="lhsRect" HorizontalAlignment="Left" Fill="Red" Opacity="0"/>
         <Rectangle Width="446" Name="rhsRect" HorizontalAlignment="Right" Fill="Red" Opacity="0"/>
+        <Image Name="image" Height="536" Width="512" Source="/images/img1.jpg" HorizontalAlignment="Left" Margin="44,532,0,0" MouseDown="Image_MouseDown"/>
+        <TextBlock Name="debugBox" HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="144" Width="408" FontSize="36" Foreground="Black" Text="DEBUG"/>
         <Grid Style="{StaticResource GridButtonsStyle}">
             <StackPanel Style="{StaticResource StackPanelButtonsStyle}" Name="buttonPanel">
                 <Button Content="Color" Style="{StaticResource ButtonStyle}" Click="Color_Click" />
